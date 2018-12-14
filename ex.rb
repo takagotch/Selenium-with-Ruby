@@ -1,0 +1,2 @@
+class ExController < ApplicationController
+end
