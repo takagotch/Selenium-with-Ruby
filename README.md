@@ -78,3 +78,75 @@ driver = Selenium::WebDriver.for :remote, desired_capabilities:: caps
 ```sh
 java -jar selenium-server-standalone.jar
 ```
+
+```rb
+browser = Waitr::Browser.new(:firefox)
+
+browser = Waitr::Browser.new(:remote,
+  :url => "http://USERNAME:ACCESS_KEY@hub-cloud.browserstack.com/wd/hub",
+  :desired_capabilities => caps)
+  
+require 'rubygems'
+require 'rubygems'
+require 'waitr-webdriver'
+include Selenium
+caps = WebDriver::Remote::Capabilities.new
+caps[:os] = "Windows"
+caps[:name] = "Bstack-[] Waitr Single Test"
+caps[:browser] = "firefox"
+caps[:browser_version] = "50"
+caps["browserstack.debug"] = "true"
+
+browser = Waitr::Browser.new(:remote,
+  :url => "http://USERNAME:ACCESS_KEY@hub-cloud.browserstack.com/wd/hub",
+  :desired_capabilities => caps)
+  
+browser.goto "http://www.google.com"
+browser.text_field(:name => 'q').set 'BrowserStack'
+browser.button(:name => 'btnK').click
+
+puts browser.title
+browser.quit
+
+rake BS_USERNAME=USERNAME BS_AUTHKEY=ACCESS_KEY nodes=3
+
+browser = Waitr::Browser.new(:firefox)
+
+browser = Waitr::Browser.new(:remote,
+  :url => "http://USERNAME:ACCESS_KEY@hub-cloud.browserstack.com/wd/hub",
+  :desired_capabilities => caps)
+  
+require 'rubygems'
+require 'rake/testtask'
+require 'parallel'
+require 'json'
+
+@browser = JSON.load(open('browsers.json'))
+@test_folder = "test/*_test.rb"
+@parallel_limit = ENV["nodes"] || 1
+@parallel_limit = @parallel_limit.to_i
+
+task :minitest do
+  current_browser = ""
+  begin
+    Parallel.map(@browser, :in_theads => @parallel_limit) do |browser|
+    puts "Running with: #{browser.inspect}"
+    ENV['SELENIMU_BROWSER'] = browser['browser']
+    ENV['SELENIUM_VERSION'] = browser['broser_version']
+    ENV['BS_AUTOMATE_OS'] = browser['os']
+    ENV['BS_AUTOMATE_OS_VERSION'] = browser['os_version']
+    Dir.glob(@test_folder).each do |test_file|
+      IO.popen("ruby #{test_file}") do |io|
+        io.each do |line|
+          puts line
+        end
+      end
+    end
+  rescue SystemExit, Interrupt
+    puts "User stopped script!"
+    puts "Failed to run tests for #{current_browser.inspect}"
+  end
+end
+
+task :default => [:minitest]
+```
